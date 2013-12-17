@@ -26,14 +26,7 @@ public class VerifierServlet extends HttpServlet {
         System.out.println("VerifierServlet received an U-Prove token");
 
         // receive JSON object
-        JSONObject message_token = null;
-        try {
-            JSONParser parser = new JSONParser();
-            Object jsonObj = parser.parse(request.getParameter("json"));
-            message_token = (JSONObject) jsonObj;
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        JSONObject message_token = Helper.parseToJSON(request.getParameter("json"));
 
         // receive token parameters and other parameters
         String serviceProvider = (String) message_token.get("serviceProvider");
@@ -53,7 +46,10 @@ public class VerifierServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // if the token is locally, then service provider and disclosed attributes is not in the JSON object
+        // prover and verifier should validate the issuer parameters upon reception
+        ip.validate();
+
+        // if the token is locally stored the service provider is not in the JSON object
         if (request.getParameter("token").equals("local")) {
             serviceProvider = request.getParameter("serviceProvider");
         }
@@ -75,9 +71,6 @@ public class VerifierServlet extends HttpServlet {
         }
 
         System.out.println("VerifierServlet got the following attributes: " + attributes);
-
-        // prover and verifier should validate the issuer parameters upon reception
-        ip.validate();
 
         // verifier verifies the presentation proof
         try {

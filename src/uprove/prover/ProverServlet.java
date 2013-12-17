@@ -59,22 +59,15 @@ public class ProverServlet extends HttpServlet {
             message_init.put("numberOfAttributes", this.numberOfAttributes);
 
             // send message by POST
-            String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
-                    + "/IssuerServlet";
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // add request header
-
+            String url = Helper.getPostURL(request, "/IssuerServlet");
             String urlParameters = "message=init&json=" + message_init.toJSONString();
 
             // send post request
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
+            HttpURLConnection con = Helper.requestURL(url, urlParameters);
 
+            // get response code
             int responseCode = con.getResponseCode();
+
             System.out.println("ProverServlet sent init message (response code: " + responseCode + ")");
 
             // notify if error (nested notification about an server error, between servlets)
@@ -87,14 +80,7 @@ public class ProverServlet extends HttpServlet {
             System.out.println("ProverServlet received first message");
 
             // receive JSON object
-            JSONObject message_1 = null;
-            try {
-                JSONParser parser = new JSONParser();
-                Object jsonObj = parser.parse(request.getParameter("json"));
-                message_1 = (JSONObject) jsonObj;
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            JSONObject message_1 = Helper.parseToJSON(request.getParameter("json"));
 
             // receive issuer parameters and other parameters
             byte[] tokenInformation = new byte[0];
@@ -139,38 +125,25 @@ public class ProverServlet extends HttpServlet {
             }
 
             // send message by POST
-            String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
-                    + "/IssuerServlet";
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // add request header
-
+            String url = Helper.getPostURL(request, "/IssuerServlet");
             String urlParameters = "message=2&json=" + message_2.toJSONString();
 
             // send post request
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
+            HttpURLConnection con = Helper.requestURL(url, urlParameters);
+
+            // get response code
+            int responseCode = con.getResponseCode();
 
             // notify if error (nested notification about an server error, between servlets)
-            int responseCode = con.getResponseCode();
-            if (responseCode != 200) response.setStatus(500);
+            if (responseCode != 200)
+                response.setStatus(500);
 
             System.out.println("ProverServlet sent second message (response code: " + responseCode + ")");
         } else if (request.getParameter("message").equals("3")) {
             System.out.println("ProverServlet received third message");
 
             // receive JSON object
-            JSONObject message_3 = null;
-            try {
-                JSONParser parser = new JSONParser();
-                Object jsonObj = parser.parse(request.getParameter("json"));
-                message_3 = (JSONObject) jsonObj;
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            JSONObject message_3 = Helper.parseToJSON(request.getParameter("json"));
 
             // receive and decode message
             byte[][] message3 = new byte[this.numberOfTokens][];
@@ -183,7 +156,7 @@ public class ProverServlet extends HttpServlet {
                 e.printStackTrace();
             }
 
-            // prover generates the U-Prove wallets
+            // prover send information to the U-Prove wallets which keep track of the tokens
             System.out.println("ProverServlet generate token");
             this.upkt = this.prover.generateTokens(message3);
 
@@ -199,24 +172,18 @@ public class ProverServlet extends HttpServlet {
             }
 
             // send message by POST
-            String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
-                    + "/WalletsServlet";
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // add request header
-
+            String url = Helper.getPostURL(request, "/WalletsServlet");
             String urlParameters = "&json=" + message_tokens.toJSONString();
 
             // send post request
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
+            HttpURLConnection con = Helper.requestURL(url, urlParameters);
+
+            // get response code
+            int responseCode = con.getResponseCode();
 
             // notify if error (nested notification about an server error, between servlets)
-            int responseCode = con.getResponseCode();
-            if (responseCode != 200) response.setStatus(500);
+            if (responseCode != 200)
+                response.setStatus(500);
 
             System.out.println("ProverServlet sent wallets message (response code: " + responseCode + ")");
         } else {

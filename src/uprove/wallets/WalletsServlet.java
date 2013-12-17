@@ -31,7 +31,6 @@ public class WalletsServlet extends HttpServlet {
     private UProveKeyAndToken[] upkt;
     private boolean STATE_READY = false;
     private static String token;
-    private int[] disclosed;
     private byte[] message;
     private UProveKeyAndToken keyAndToken;
     private static String document;
@@ -40,15 +39,9 @@ public class WalletsServlet extends HttpServlet {
         System.out.println("WalletsServlet received wallets message");
 
         // receive JSON object
-        JSONObject message_tokens = null;
-        try {
-            JSONParser parser = new JSONParser();
-            Object jsonObj = parser.parse(request.getParameter("json"));
-            message_tokens = (JSONObject) jsonObj;
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        JSONObject message_tokens = Helper.parseToJSON(request.getParameter("json"));
 
+        // receive token parameters and other parameters
         this.numberOfTokens = ((Long) message_tokens.get("numberOfTokens")).intValue();
         this.numberOfAttributes = ((Long) message_tokens.get("numberOfAttributes")).intValue();
         try {
@@ -75,7 +68,7 @@ public class WalletsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // check if user still have wallets left
         if (this.numberOfTokens == 0) {
-            System.out.println("No valid wallets left");
+            System.out.println("No valid tokens left");
             response.sendRedirect(Helper.getServletPath()+"/token-wallets/?numberOfTokens=invalid");
         } else {
             if (request.getParameter("message").equals("present_token")) {
@@ -87,37 +80,26 @@ public class WalletsServlet extends HttpServlet {
                     document = request.getParameter("document");
 
                 // get disclosedAttributes
-                String disclosedAttributes = getAttributes(request.getParameter("attribute_1"), request.getParameter("attribute_2"), request.getParameter("attribute_3"));
+                String disclosedAttributes = getAttributes(request.getParameter("attribute_1"),
+                        request.getParameter("attribute_2"), request.getParameter("attribute_3"));
 
                 // token presentation
                 JSONObject message_token = createToken(disclosedAttributes, serviceProvider);
 
                 // protocol parameters (shared by prover and verifier)
-                String[] disclosedArray = disclosedAttributes.split(",");
-                this.disclosed = new int[disclosedArray.length]; // what attributes are sent to the verifier, a list of integers identifying what attribute to sent, separated by a comma
-                for (int i = 0; i < disclosedArray.length; i++) {
-                    this.disclosed[i] = Integer.parseInt(disclosedArray[i]);
-                }
+                int[] disclosed = getDisclosed(disclosedAttributes);
 
                 // prover generates the presentation proof
-                PresentationProof proof = PresentationProtocol.generatePresentationProof(this.ip, this.disclosed, this.message, null, this.keyAndToken, this.attributes);
+                PresentationProof proof = PresentationProtocol.generatePresentationProof(this.ip, disclosed, this.message, null, this.keyAndToken, this.attributes);
                 message_token.put("proof", Helper.toString(proof)); // added Serializable in PresentationProof because need to send UproveToken to VerifierServlet
 
                 // send message by POST
                 String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
                         + "/VerifierServlet";
-                URL obj = new URL(url);
-                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-                con.setRequestMethod("POST"); // add request header
-
                 String urlParameters = "json=" + message_token.toJSONString() + "&token=online";
 
                 // send post request
-                con.setDoOutput(true);
-                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-                wr.writeBytes(urlParameters);
-                wr.flush();
-                wr.close();
+                HttpURLConnection con = Helper.requestURL(url, urlParameters);
 
                 System.out.println("WalletsServlet sent an U-Prove token to " + serviceProvider + " (response code: " + con.getResponseCode() + ")");
 
@@ -131,14 +113,11 @@ public class WalletsServlet extends HttpServlet {
                 String token = request.getParameter("token"); // token presentation
 
                 // get disclosedAttributes
-                String disclosedAttributes = getAttributes(request.getParameter("attribute_1"), request.getParameter("attribute_2"), request.getParameter("attribute_3"));
+                String disclosedAttributes = getAttributes(request.getParameter("attribute_1"),
+                        request.getParameter("attribute_2"), request.getParameter("attribute_3"));
 
                 // protocol parameters (shared by prover and verifier)
-                String[] disclosedArray = disclosedAttributes.split(",");
-                int[] disclosedLocal = new int[disclosedArray.length]; // what attributes are sent to the verifier, a list of integers identifying what attribute to sent, separated by a comma
-                for (int i = 0; i < disclosedArray.length; i++) {
-                    disclosedLocal[i] = Integer.parseInt(disclosedArray[i]);
-                }
+                int[] disclosed = getDisclosed(disclosedAttributes);
 
                 // receive JSON object
                 JSONObject message_token = null;
@@ -151,7 +130,7 @@ public class WalletsServlet extends HttpServlet {
                 }
 
                 // prover generates the presentation proof
-                PresentationProof proofLocal = PresentationProtocol.generatePresentationProof(this.ip, disclosedLocal, this.message, null, this.keyAndToken, this.attributes);
+                PresentationProof proofLocal = PresentationProtocol.generatePresentationProof(this.ip, disclosed, this.message, null, this.keyAndToken, this.attributes);
                 message_token.put("disclosedAttributes", disclosedAttributes);
                 message_token.put("proof", Helper.toString(proofLocal)); // added Serializable in PresentationProof because need to send UproveToken to VerifierServlet
 
@@ -177,7 +156,7 @@ public class WalletsServlet extends HttpServlet {
                 response.sendRedirect(con.getHeaderField("service_provider"));
             } else if (request.getParameter("message").equals("get_token")) {
                 if (!STATE_READY) {
-                    System.out.println("Token wallets asked after a token but WalletsServlet have not received wallets yet");
+                    System.out.println("Token wallets asked after a token but WalletsServlet have not received a token yet");
 
                     response.sendRedirect(Helper.getServletPath()+"/token-wallets/?failedAt=WalletsServlet&reason=stateNotReady");
                 } else {
@@ -213,13 +192,22 @@ public class WalletsServlet extends HttpServlet {
         if (attribute_3 == 1)
             disclosedAttributes += "3";
 
-
         int disclosedLength = disclosedAttributes.length()-1;
         for (int i=disclosedLength; 0<i; i--) {
             disclosedAttributes = new StringBuffer(disclosedAttributes).insert(i, ",").toString();
         }
 
         return disclosedAttributes;
+    }
+
+    private int[] getDisclosed(String disclosedAttributes) {
+        String[] disclosedArray = disclosedAttributes.split(",");
+        int[] disclosed = new int[disclosedArray.length]; // what attributes are sent to the verifier, a list of integers identifying what attribute to sent, separated by a comma
+        for (int i = 0; i < disclosedArray.length; i++) {
+            disclosed[i] = Integer.parseInt(disclosedArray[i]);
+        }
+
+        return disclosed;
     }
 
     public JSONObject createToken(String disclosedAttributes, String serviceProvider) {

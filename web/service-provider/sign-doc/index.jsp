@@ -68,9 +68,7 @@
             <h1>Welcome to document signing</h1>
             <p>Sign the following text in the text area by using one of your U-Prove token.</p>
             <form class="form-horizontal" action="<%= url %>/WalletsServlet" method="get">
-                <textarea name="document" class="form-control" cols="55" rows="10">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aliquam turpis eget nunc placerat laoreet. Aliquam semper molestie accumsan. Sed ultrices non urna nec rutrum.
-                    Etiam pellentesque porta dolor, in tristique lacus dapibus sed. Cras scelerisque, est tincidunt consectetur cursus, enim mauris bibendum velit, non dapibus elit eros vitae odio. Aliquam ipsum ante, pellentesque consequat nibh sagittis, gravida elementum nisl.
-                </textarea>
+                <textarea name="document" class="form-control" cols="55" rows="10">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aliquam turpis eget nunc placerat laoreet. Aliquam semper molestie accumsan. Sed ultrices non urna nec rutrum.</textarea>
                 <br />
 
                 <div style="float: left;">

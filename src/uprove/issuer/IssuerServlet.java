@@ -47,14 +47,7 @@ public class IssuerServlet extends HttpServlet {
             System.out.println("IssuerServlet received init message");
 
             // receive JSON object
-            JSONObject message_init = null;
-            try {
-                JSONParser parser = new JSONParser();
-                Object jsonObj = parser.parse(request.getParameter("json"));
-                message_init = (JSONObject) jsonObj;
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            JSONObject message_init = Helper.parseToJSON(request.getParameter("json"));
 
             // token issuance
             System.out.println("Issuing U-Prove wallets");
@@ -100,38 +93,25 @@ public class IssuerServlet extends HttpServlet {
             }
 
             // send message by POST
-            String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
-                    + "/ProverServlet";
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // add request header
-
+            String url = Helper.getPostURL(request, "/ProverServlet");
             String urlParameters = "message=1&json=" + message_1.toJSONString();
 
             // send post request
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
+            HttpURLConnection con = Helper.requestURL(url, urlParameters);
+
+            // get response code
+            int responseCode = con.getResponseCode();
 
             // notify if error (nested notification about an server error, between servlets)
-            int responseCode = con.getResponseCode();
-            if (responseCode != 200) response.setStatus(500);
+            if (responseCode != 200)
+                response.setStatus(500);
 
             System.out.println("IssuerServlet sent first message (response code: " + responseCode + ")");
         } else if (request.getParameter("message").equals("2")) {
             System.out.println("IssuerServlet received second message");
 
             // receive JSON object
-            JSONObject message_2 = null;
-            try {
-                JSONParser parser = new JSONParser();
-                Object jsonObj = parser.parse(request.getParameter("json"));
-                message_2 = (JSONObject) jsonObj;
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            JSONObject message_2 = Helper.parseToJSON(request.getParameter("json"));
 
             // receive and decode message
             byte[][] message2 = new byte[numberOfTokens][];
@@ -154,28 +134,22 @@ public class IssuerServlet extends HttpServlet {
             }
 
             // send message by POST
-            String url = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getServletPath().length())
-                    + "/ProverServlet";
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // add request header
-
+            String url = Helper.getPostURL(request, "/ProverServlet");
             String urlParameters = "message=3&json=" + message_3.toJSONString();
 
             // send post request
-            con.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            wr.writeBytes(urlParameters);
-            wr.flush();
-            wr.close();
+            HttpURLConnection con = Helper.requestURL(url, urlParameters);
+
+            // get response code
+            int responseCode = con.getResponseCode();
 
             // notify if error (nested notification about an server error, between servlets)
-            int responseCode = con.getResponseCode();
-            if (responseCode != 200) response.setStatus(500);
+            if (responseCode != 200)
+                response.setStatus(500);
 
             System.out.println("IssuerServlet sent third message (response code: " + responseCode + ")");
         } else {
-            response.sendRedirect(Helper.getServletPath()+"/prover/?failedAt=IssuerServlet");
+            response.sendRedirect(Helper.getServletPath() + "/prover/?failedAt=IssuerServlet");
         }
     }
 
