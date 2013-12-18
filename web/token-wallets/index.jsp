@@ -110,7 +110,7 @@
 
             <p>This is your token wallets where you can keep track of how many tokens you have left.</p>
 
-            <p>It is possible to simulate that a token is stored to your hard drive or a USB.</p>
+            <p>It is possible to simulate that a token is stored to your hard drive or a USB by clicking "Get token".</p>
 
             <p>Copy the content in the text area and save it in a file.</p>
 

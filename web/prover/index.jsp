@@ -66,9 +66,13 @@
     <div class="row">
         <div class="col-lg-6">
             <h1>Hello</h1>
+
             <p>This service let you generate tokens, which you can use to authenticate yourself at a service provider.</p>
+
             <p>Use the button on the right, to get your personal data from wayf (simulation).</p>
-            <p>When you have chosen how many tokens you want to generate (each token can only be used once) and clicked "Generate tokens", are you ready to login at a service provider by using one of your tokens.</p>
+
+            <p>When you have chosen how many tokens you want to generate (each token can only be used once) and clicked "Generate tokens", you are ready to login at a service provider by using one of your tokens.</p>
+
             <p>By doing this you are sure that the service provider only know least possible about yourself.</p>
         </div>
         <div class="col-lg-4">

@@ -100,13 +100,13 @@
         <div class="col-lg-4">
             <h3>And then?</h3>
 
-            <p>The prover have new received your information and is ready to generate tokens.</p>
+            <p>The prover have new received your information and is ready to generate your tokens.</p>
 
-            <p>How many tokens to generate do you decide, but a token can only be used once.</p>
+            <p>How many do you decide, but a token can only be used once.</p>
 
             <p>If you ran out of tokens, you have to do this and the previous step again.</p>
 
-            <p>When you login at a service provider do you chose what information you want to give the service
+            <p>When you login at a service provider you chose what information you want to give the service
                 provider.</p>
         </div>
     </div>

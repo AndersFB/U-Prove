@@ -93,6 +93,7 @@
             <h3>Verifier what?</h3>
 
             <p>A service provider will check if your token is valid and then receive the passed attributes.</p>
+
             <p>By using one of your tokens you only tell what is required and nothing more.</p>
         </div>
     </div>
