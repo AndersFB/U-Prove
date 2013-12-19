@@ -47,7 +47,9 @@ public class SDKSample {
     		 */
 
     		IssuerSetupParameters isp = new IssuerSetupParameters();
-    		isp.setEncodingBytes(new byte[] {0,0,0,1,0}); //define encoding bytes for each attributes
+            // if the attributes length is greater than q-1, then we have to raise g to the hashed value
+            // instead of the attribute itself because the exponent have af max size.
+    		isp.setEncodingBytes(new byte[] {0,0,0,1,0}); // define encoding bytes for each attributes (1=hash attribute, 0=don't)
     		isp.setHashAlgorithmUID("SHA-256");
     		isp.setParametersUID("unique UID".getBytes());
     		isp.setSpecification("specification".getBytes());
@@ -100,10 +102,10 @@ public class SDKSample {
     		// issuer generates third issuance message
     		byte[][] message3 = issuer.generateThirdMessage(message2);
 
-    		// prover generates the U-Prove wallets
+    		// prover generates the U-Prove tokens
     		UProveKeyAndToken[] upkt = prover.generateTokens(message3);
 
-    		// application specific storage of keys, wallets, and attributes
+    		// application specific storage of keys, tokens, and attributes
 
     		/*
     		 * token presentation
@@ -214,7 +216,7 @@ public class SDKSample {
     		// issuer generates third issuance message
     		byte[][] message3 = issuer.generateThirdMessage(message2);
 
-    		// prover generates the U-Prove wallets
+    		// prover generates the U-Prove tokens
     		UProveKeyAndToken[] upkt = prover.generateTokens(message3);
 
     		// application specific storage of keys, wallets, and attributes

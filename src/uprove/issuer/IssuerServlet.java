@@ -68,7 +68,9 @@ public class IssuerServlet extends HttpServlet {
             }
 
             // issuer parameters setup
-            encodingBytes = new byte[this.numberOfAttributes]; // define encoding bytes for each attributes
+            // if the attributes length is greater than q-1, then we have to raise g to the hashed value
+            // instead of the attribute itself because the exponent have af max size.
+            encodingBytes = new byte[this.numberOfAttributes]; // define encoding bytes for each attributes (1=hash attribute, 0=don't)
             for (int i = 0; i < this.numberOfAttributes; i++) {
                 encodingBytes[i] = 0;
             }
